@@ -15,17 +15,19 @@ use DateTime::Format::Pg;
 use Testbed::Spatial::VDS::Schema::Public;
 
 my @files = ();
-my $db    = 'spatialvds';
-my $host  = 'metis.its.uci.edu';
-my $dbuser;
-my $dbpass;
+my $user   = $ENV{PSQL_USER} || q{};
+my $pass   = $ENV{PSQL_PASS} || q{};
+my $host   = $ENV{PSQL_HOST} || q{};
+my $dbname = $ENV{PSQL_DB}   || 'spatialvds';
+my $port   = $ENV{PSQL_PORT} || 5432;
+
 my $year;
 my $result = GetOptions(
     'files:s'    => \@files,
     'year=i'     => \$year,
-    'database:s' => \$db,
-    'user=s'     => \$dbuser,
-    'pass=s'     => \$dbpass,
+    'database:s' => \$dbname,
+    'user=s'     => \$user,
+    'pass=s'     => \$pass,
 );
 
 if (@files) {
@@ -44,8 +46,8 @@ if ( !@files ) {
 carp 'going to process ', Dumper \@files;
 
 my $vdb =
-  Testbed::Spatial::VDS::Schema::Public->connect( "dbi:Pg:dbname=$db;host=$host",
-    $dbuser, $dbpass );
+  Testbed::Spatial::VDS::Schema::Public->connect( "dbi:Pg:dbname=$dbname;host=$host",
+    $user, $pass );
 
 my @bulk;
 
@@ -53,7 +55,7 @@ sub checkbulk {
     my $args    = shift;
     my $datarow = $vdb->resultset('WimStatus')->find($args);
     if ($datarow) {
-        carp 'found datarow in db for ', Dumper $args;
+      # carp 'found datarow in db for ', Dumper $args;
         return 0;
     }
     else {
@@ -194,10 +196,19 @@ foreach my $file (@files) {
                 carp "had to fix weight status on row $row";
             }
 
-            if ( $weight_notes =~ /NEED WGT OVER LIMTS CHANGED/ism ) {
-                $ts.weight_status eq DateTime::Format::DateParse->parse_datetime('2006-11-01') &&
-		  # right in mid hack here, custom sticking in an exception.  just rerun and look for the bug report on crash.
+#             if ( $weight_notes =~ /NEED WGT OVER LIMTS CHANGED/ism ) {
+#                 $ts.weight_status eq DateTime::Format::DateParse->parse_datetime('2006-11-01') &&
+# 		  # right in mid hack here, custom sticking in an exception.  just rerun and look for the bug report on crash.
 
+#                 carp "had to fix weight status on row $row";
+#             }
+
+            if ( $weight_status =~ /XX/ism && !$class_status ) {
+                $class_status = $weight_status;
+                carp "had to fix class status on row $row";
+            }
+            if ( $class_status =~ /XX/ism && !$weight_status ) {
+                $weight_status = $class_status;
                 carp "had to fix weight status on row $row";
             }
 
