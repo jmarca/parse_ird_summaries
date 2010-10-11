@@ -15,6 +15,8 @@ use DateTime::Format::DateParse;
 use DateTime::Format::Pg;
 use Testbed::Spatial::VDS::Schema;
 
+croak 'do not use this script.  Use parse_WIM_summaries_5min.pl instead';
+
 my $fh = IO::File->new();
 
 my $dir;
