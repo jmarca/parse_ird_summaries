@@ -2,10 +2,6 @@
 
 var should = require('should')
 var _ = require('lodash');
-// eventually, work out how to do
-// var rewire = require("rewire");
-// // rewire acts exactly like require.
-// var myModule = rewire("../lib/parse_pat_reports");
 
 var ppr = require('../lib/file_parser.js')
 

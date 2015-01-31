@@ -24,6 +24,7 @@
     "config_okay": "0.0.3",
     "glob": "^4.3.2",
     "lodash": "^2.4.1",
+    "moment": "^2.9.0",
     "optimist": "^0.6.1",
     "pg": "^4.1.1",
     "queue-async": "*"
