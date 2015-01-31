@@ -1,14 +1,14 @@
 {
-  "name": "parse_pat_summaries",
+  "name": "parse_ird_summaries",
   "version": "1.0.0",
-  "description": "parse PAT summary reports",
-  "main": "parse_pat_summary_reports.js",
+  "description": "parse IRD summary reports",
+  "main": "parse_ird_summary_reports.js",
   "scripts": {
     "test": "mocha"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jmarca/calvad_parse_pat_summaries"
+    "url": "https://github.com/jmarca/calvad_parse_ird_summaries"
   },
   "keywords": [
     "CalVAD"
@@ -16,9 +16,9 @@
   "author": "James E. Marca",
   "license": "GPLv2",
   "bugs": {
-    "url": "https://github.com/jmarca/calvad_parse_pat_summaries/issues"
+    "url": "https://github.com/jmarca/calvad_parse_ird_summaries/issues"
   },
-  "homepage": "https://github.com/jmarca/calvad_parse_pat_summaries",
+  "homepage": "https://github.com/jmarca/calvad_parse_ird_summaries",
   "dependencies": {
     "byline": "^4.1.1",
     "config_okay": "0.0.3",

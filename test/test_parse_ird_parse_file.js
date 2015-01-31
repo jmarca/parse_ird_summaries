@@ -24,7 +24,7 @@ var localclient
 var localclientdone
 var speed_table = 'deleteme_test_summary_speed'
 var class_table = 'deleteme_test_summary_class'
-var speed_class_table = 'deleteme_test_summary_speed_class'
+// var speed_class_table = 'deleteme_test_summary_speed_class'
 
 
 var create_tables =['CREATE  TABLE '+class_table+'('
@@ -43,22 +43,22 @@ var create_tables =['CREATE  TABLE '+class_table+'('
                    + '     veh_count integer not null,'
                    + '     primary key (site_no,ts,wim_lane_no,veh_speed)'
                    + ' )'
-                   ,'CREATE TABLE '+speed_class_table +' ('
-                   + '     site_no integer not null ,'
-                   + '     ts      timestamp not null,'
-                   + '     wim_lane_no integer not null,'
-                   + '     veh_class integer not null,'
-                   + '     veh_speed numeric not null,'
-                   + '     veh_count integer not null,'
-                   + '     primary key (site_no,ts,wim_lane_no,veh_class,veh_speed)'
-                   + ' )'
+                   // ,'CREATE TABLE '+speed_class_table +' ('
+                   // + '     site_no integer not null ,'
+                   // + '     ts      timestamp not null,'
+                   // + '     wim_lane_no integer not null,'
+                   // + '     veh_class integer not null,'
+                   // + '     veh_speed numeric not null,'
+                   // + '     veh_count integer not null,'
+                   // + '     primary key (site_no,ts,wim_lane_no,veh_class,veh_speed)'
+                   // + ' )'
                    ]
 
 before(function (done){
     config_okay(config_file,function(err,c){
         if(err) throw new Error(err)
 
-        if(!c.postgresql.parse_pat_summaries_db){ throw new Error('need valid postgresql.parse_pat_summaries_db defined in test.config.json')}
+        if(!c.postgresql.parse_ird_summaries_db){ throw new Error('need valid postgresql.parse_ird_summaries_db defined in test.config.json')}
         if(c.postgresql.table){ console.log('ignoring postgresql.table entry in config file; using temp tables instead') }
         if(!c.postgresql.username){ throw new Error('need valid postgresql.username defined in test.config.json')}
         if(!c.postgresql.password){ throw new Error('need valid postgresql.password defined in test.config.json')}
@@ -73,14 +73,14 @@ before(function (done){
         var pass = c.postgresql.password ? c.postgresql.password : 'secret';
         var port = c.postgresql.port     ? c.postgresql.port :  5432;
         // global
-        var db  = c.postgresql.parse_pat_summaries_db ? c.postgresql.parse_pat_summaries_db : 'spatialvds'
+        var db  = c.postgresql.parse_ird_summaries_db ? c.postgresql.parse_ird_summaries_db : 'spatialvds'
         connectionString = "pg://"+user+":"+pass+"@"+host+":"+port+"/"+db
 
         config['postgresql'] =
             _.assign(c.postgresql
                      ,{'speed_table':speed_table
                        ,'class_table':class_table
-                       ,'speed_class_table':speed_class_table
+                      //,'speed_class_table':speed_class_table
                       })
 
         pg.connect(connectionString, function(err, _client, _done) {
@@ -118,7 +118,8 @@ before(function (done){
 after( function(done){
     var stmt = 'drop table '+[speed_table
                              ,class_table
-                             ,speed_class_table].join(',')
+                             //,speed_class_table
+                             ].join(',')
     var query = localclient.query(stmt)
     query.on('end', function(r){
         return done()
@@ -146,7 +147,7 @@ describe ('parse file can process a file', function(){
 
         var pf = ppr.setup_file_parser(config)
         should.exist(pf)
-        var filename = rootdir+'/test/pat_small_test_file.txt'
+        var filename = rootdir+'/test/ird_small_test_file.txt'
         console.log('parsing '+filename)
         pf(filename,function(err){
             should.not.exist(err)
@@ -160,7 +161,7 @@ describe ('parse file can process a file', function(){
 
         var pf = ppr.setup_file_parser(config)
         should.exist(pf)
-        var filename = rootdir+'/test/pat_report_sample_2.txt'
+        var filename = rootdir+'/test/ird_report_sample_2.txt'
         console.log('parsing '+filename)
         pf(filename,function(err){
             should.not.exist(err)
