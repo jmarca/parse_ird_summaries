@@ -9,6 +9,7 @@ var fs = require('fs')
 var path = require('path')
 var rootdir = path.normalize(__dirname+'/..')
 var config_file = rootdir+'/test.config.json'
+var process_header_lines = require('../lib/ird_header.js')
 
 var glob = require('glob')
 
@@ -82,7 +83,7 @@ before(function (done){
                        ,'class_table':class_table
                       //,'speed_class_table':speed_class_table
                       })
-
+        config.process_header_lines=process_header_lines
         pg.connect(connectionString, function(err, _client, _done) {
             if(err){
                 console.log(err)
@@ -146,6 +147,7 @@ describe ('parse file can process a file', function(){
     it('should parse a file',function(done){
 
         var pf = ppr.setup_file_parser(config)
+
         should.exist(pf)
         var filename = rootdir+'/test/ird_small_test_file.txt'
         console.log('parsing '+filename)
@@ -161,7 +163,7 @@ describe ('parse file can process a file', function(){
 
         var pf = ppr.setup_file_parser(config)
         should.exist(pf)
-        var filename = rootdir+'/test/ird_report_sample_2.txt'
+        var filename = rootdir+'/test/2012/STATION.020'
         console.log('parsing '+filename)
         pf(filename,function(err){
             should.not.exist(err)
@@ -171,34 +173,34 @@ describe ('parse file can process a file', function(){
         return null
     })
 
-    it('should parse multiple troublesome files',function(done){
-        var fqueuer = ppr.file_queuer(config)
-        should.exist(fqueuer)
-        var groot = rootdir+'/test/report_0210_pr'
-        var pattern = "*"
-        glob("/**/"+pattern,{'cwd':groot,'root':groot},function(err,files){
-            var filequeue = queue()
-            files.forEach(function(f){
-                filequeue.defer(fs.stat,f)
-            })
-            filequeue.awaitAll(function(err,stats){
-                for(var i =0,j=stats.length;i<j; i++){
-                    if(stats[i].isFile()){
-                        fqueuer(files[i])
-                    }
-                }
-                fqueuer.awaitAll(function(e,results){
-                    should.not.exist(err)
-                    console.log('in test, done with files')
-                    // insert sql checks here
-                    return done()
-                })
-                return null
-            })
-            return null
-        })
-        return null
-    })
+    // it('should parse multiple troublesome files',function(done){
+    //     var fqueuer = ppr.file_queuer(config)
+    //     should.exist(fqueuer)
+    //     var groot = rootdir+'/test/report_0210_pr'
+    //     var pattern = "*"
+    //     glob("/**/"+pattern,{'cwd':groot,'root':groot},function(err,files){
+    //         var filequeue = queue()
+    //         files.forEach(function(f){
+    //             filequeue.defer(fs.stat,f)
+    //         })
+    //         filequeue.awaitAll(function(err,stats){
+    //             for(var i =0,j=stats.length;i<j; i++){
+    //                 if(stats[i].isFile()){
+    //                     fqueuer(files[i])
+    //                 }
+    //             }
+    //             fqueuer.awaitAll(function(e,results){
+    //                 should.not.exist(err)
+    //                 console.log('in test, done with files')
+    //                 // insert sql checks here
+    //                 return done()
+    //             })
+    //             return null
+    //         })
+    //         return null
+    //     })
+    //     return null
+    // })
 
     return null
 })
