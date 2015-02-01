@@ -117,20 +117,20 @@ before(function (done){
 })
 
 after( function(done){
-    var stmt = 'drop table '+[speed_table
-                             ,class_table
-                             //,speed_class_table
-                             ].join(',')
-    var query = localclient.query(stmt)
-    query.on('end', function(r){
+    // var stmt = 'drop table '+[speed_table
+    //                          ,class_table
+    //                          //,speed_class_table
+    //                          ].join(',')
+    // var query = localclient.query(stmt)
+    // query.on('end', function(r){
         return done()
-    })
-    query.on('error',function(e){
-        console.log(e)
-        console.log('you should manually delete: '+stmt)
-        throw new Error(e)
-        return null
-    })
+    // })
+    // query.on('error',function(e){
+    //     console.log(e)
+    //     console.log('you should manually delete: '+stmt)
+    //     throw new Error(e)
+    //     return null
+    // })
     return null
 })
 
@@ -153,8 +153,28 @@ describe ('parse file can process a file', function(){
         console.log('parsing '+filename)
         pf(filename,function(err){
             should.not.exist(err)
-            // add sql checks here
-            return done(err)
+            pg.connect(connectionString, function(err, pg_client, pg_done) {
+
+                pg_client.query('select * from '+speed_table,function(e,d){
+                    should.not.exist(e)
+                    should.exist(d)
+                    d.rows.forEach(function(row,i){
+                        row.should.have.keys(
+                            'site_no'
+                          , 'ts'
+                          , 'wim_lane_no'
+                          , 'veh_speed'
+                          , 'veh_count'
+                        )
+                    });
+                    d.should.have.property('rows').with.lengthOf (1210)
+                    console.log(d.rows.length)
+                    pg_done()
+                    return done()
+                })
+                return null
+            })
+            return null
         })
         return null
     })
@@ -168,6 +188,8 @@ describe ('parse file can process a file', function(){
         pf(filename,function(err){
             should.not.exist(err)
             // add sql checks here
+
+
             return done(err)
         })
         return null
