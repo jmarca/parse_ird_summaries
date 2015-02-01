@@ -135,5 +135,46 @@ describe ('collector',function(){
 
 
     })
+    it('should handle lots of rows',function(done){
+
+        var maker = collector.make_collector
+        var insert_string = 'INSERT INTO '+temp_table+'(site_no,count) values'
+        var collect = maker(insert_string,config)
+        // waiting should work
+        // collect something
+        collect([[1,100]])
+        collect([[2,200]])
+        collect([[2,200]]) // dupe to break chunked upload
+
+        for (var i=0; i<20; i++){
+            var bigarray = []
+            for (var j = 0; j<100; j++){
+                var base = i*100+(j)
+                bigarray.push([base,base*10])
+            }
+            collect(bigarray)
+        }
+
+        collect.done(function(){
+            // check that db has some data
+            localclient.query('select * from '+temp_table+' order by site_no',function(e,d){
+                should.not.exist(e)
+                should.exist(d)
+                d.should.have.property('rows')
+                d.rows.should.have.lengthOf(20*100)
+                d.rows.forEach(function (r,i){
+                    r.site_no.should.eql(i)
+                    if(i===1 || i===2  ){
+                        r.count.should.eql(i*100)
+                    }else{
+                        r.count.should.eql(i*10)
+                    }
+                })
+                return done()
+            })
+        })
+
+
+    })
 
 })
