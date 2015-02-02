@@ -160,7 +160,7 @@ describe ('parse file can process a file', function(){
             should.not.exist(err)
             var speed_counts = pf.get_speed_total()
             var class_counts = pf.get_class_total()
-            speed_counts.should.be.approximately(class_counts,class_counts*0.10) // within 10%
+            speed_counts.should.be.approximately(class_counts,class_counts*0.01) // within 10%
             pg.connect(connectionString, function(err, pg_client, pg_done) {
 
                 pg_client.query('select * from '+speed_table,function(e,d){
@@ -212,7 +212,7 @@ describe ('parse file can process a file', function(){
             // add sql checks here
             var speed_counts = pf.get_speed_total()
             var class_counts = pf.get_class_total()
-            speed_counts.should.be.approximately(class_counts,class_counts*0.10) //within 10%
+            speed_counts.should.be.approximately(class_counts,class_counts*0.01) //within 10%
             pg.connect(connectionString, function(err, pg_client, pg_done) {
 
                 pg_client.query('select * from '+speed_table,function(e,d){
