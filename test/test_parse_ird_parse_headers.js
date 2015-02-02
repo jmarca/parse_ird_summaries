@@ -131,7 +131,7 @@ describe ('process header lines',function(){
                         // then we've got a whole block of data repeated on Mar 20 for some reason
 
                         var d = phl.get_date()
-                        var test_DST = d.toISOString() == '2012-03-11T10:00:00.000Z'
+                        var test_DST = d.toISOString() == '2012-03-11T10:00:00.000Z' || d.toISOString() == '2012-03-11T09:00:00.000Z' // jeez I hate DST and all the broken parsing and hashing surrounding it
                         var test_dupe_data_day = d.isBetween('2012-03-19T23:59:00', '2012-03-21T00:00:01');
 
                         var test_dup_okay = test_DST || test_dupe_data_day
