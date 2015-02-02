@@ -193,7 +193,8 @@ describe ('parse file can process a file', function(){
     })
     return null
 })
-describe ('parse file can process a file', function(){
+
+describe ('parse file can process a  big file', function(){
     var localclient
     var localclientdone
     var speed_table = 'deleteme_test_summary_speed2'
@@ -296,7 +297,7 @@ describe ('parse file can process a file', function(){
                           , 'veh_count'
                         )
                     });
-                    d.should.have.property('rows').with.lengthOf(15900)
+                    d.should.have.property('rows').with.lengthOf(15842)
                     pg_client.query('select * from '+class_table,function(e,d){
                         should.not.exist(e)
                         should.exist(d)
@@ -309,9 +310,23 @@ describe ('parse file can process a file', function(){
                               , 'veh_count'
                             )
                         });
-                        d.should.have.property('rows').with.lengthOf(13413)
-                        pg_done()
-                        return done()
+                        d.should.have.property('rows').with.lengthOf(13308)
+                        pg_client.query('select sum(veh_count) s from '+class_table,function(e,d){
+                            should.not.exist(e)
+                            should.exist(d)
+                            var saved_class = +d.rows[0].s
+                            saved_class.should.eql(class_counts)
+                            pg_client.query('select sum(veh_count) s from '+speed_table,function(e,d){
+                                should.not.exist(e)
+                                should.exist(d)
+                                var saved_spd = +d.rows[0].s
+                                saved_spd.should.eql(speed_counts)
+                                pg_done()
+                                return done()
+                            })
+                            return null
+                        })
+                        return null
                     })
                     return null
                 })
@@ -324,10 +339,3 @@ describe ('parse file can process a file', function(){
 
     return null
 })
-
-// these are tested implicitly above
-// describe('options setting',function(){
-//     it ('should allow different schemas in options setting')
-//     it ('should allow different schemas in environ setting')
-//     it ('should allow different db tables via options setting')
-// })
