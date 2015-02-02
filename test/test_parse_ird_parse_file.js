@@ -137,10 +137,10 @@ describe ('parse file can process a file', function(){
                                  ,class_table
                                   //,speed_class_table
                                  ].join(',')
-        var query = localclient.query(stmt)
-        query.on('end', function(r){
+       var query = localclient.query(stmt)
+       query.on('end', function(r){
             return done()
-        })
+       })
         query.on('error',function(e){
             console.log(e)
             console.log('you should manually delete: '+stmt)
@@ -158,6 +158,9 @@ describe ('parse file can process a file', function(){
         console.log('parsing '+filename)
         pf(filename,function(err){
             should.not.exist(err)
+            var speed_counts = pf.get_speed_total()
+            var class_counts = pf.get_class_total()
+            speed_counts.should.be.approximately(class_counts,class_counts*0.10) // within 10%
             pg.connect(connectionString, function(err, pg_client, pg_done) {
 
                 pg_client.query('select * from '+speed_table,function(e,d){
@@ -172,10 +175,24 @@ describe ('parse file can process a file', function(){
                           , 'veh_count'
                         )
                     });
-                    d.should.have.property('rows').with.lengthOf (1177)
-                    console.log(d.rows.length)
-                    pg_done()
-                    return done()
+                    d.should.have.property('rows').with.lengthOf(1193)
+                    pg_client.query('select * from '+class_table,function(e,d){
+                        should.not.exist(e)
+                        should.exist(d)
+                        d.rows.forEach(function(row,i){
+                            row.should.have.keys(
+                                'site_no'
+                              , 'ts'
+                              , 'wim_lane_no'
+                              , 'veh_class'
+                              , 'veh_count'
+                            )
+                        });
+                        d.should.have.property('rows').with.lengthOf(1070)
+                        pg_done()
+                        return done()
+                    })
+                    return null
                 })
                 return null
             })
@@ -184,21 +201,57 @@ describe ('parse file can process a file', function(){
         return null
     })
 
-    // it('should parse a big file',function(done){
+    it('should parse a big file',function(done){
 
-    //     var pf = ppr.setup_file_parser(config)
-    //     should.exist(pf)
-    //     var filename = rootdir+'/test/2012/STATION.020'
-    //     console.log('parsing '+filename)
-    //     pf(filename,function(err){
-    //         should.not.exist(err)
-    //         // add sql checks here
+        var pf = ppr.setup_file_parser(config)
+        should.exist(pf)
+        var filename = rootdir+'/test/2012/STATION.020'
+        console.log('parsing '+filename)
+        pf(filename,function(err){
+            should.not.exist(err)
+            // add sql checks here
+            var speed_counts = pf.get_speed_total()
+            var class_counts = pf.get_class_total()
+            speed_counts.should.be.approximately(class_counts,class_counts*0.10) //within 10%
+            pg.connect(connectionString, function(err, pg_client, pg_done) {
 
-
-    //         return done(err)
-    //     })
-    //     return null
-    // })
+                pg_client.query('select * from '+speed_table,function(e,d){
+                    should.not.exist(e)
+                    should.exist(d)
+                    d.rows.forEach(function(row,i){
+                        row.should.have.keys(
+                            'site_no'
+                          , 'ts'
+                          , 'wim_lane_no'
+                          , 'veh_speed'
+                          , 'veh_count'
+                        )
+                    });
+                    d.should.have.property('rows').with.lengthOf(15900)
+                    pg_client.query('select * from '+class_table,function(e,d){
+                        should.not.exist(e)
+                        should.exist(d)
+                        d.rows.forEach(function(row,i){
+                            row.should.have.keys(
+                                'site_no'
+                              , 'ts'
+                              , 'wim_lane_no'
+                              , 'veh_class'
+                              , 'veh_count'
+                            )
+                        });
+                        d.should.have.property('rows').with.lengthOf(13413)
+                        pg_done()
+                        return done()
+                    })
+                    return null
+                })
+                return null
+            })
+            return null
+        })
+        return null
+    })
 
     return null
 })
