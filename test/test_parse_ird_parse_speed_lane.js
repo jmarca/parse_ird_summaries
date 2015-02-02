@@ -70,6 +70,8 @@ describe ('process speed lane lines',function(){
         var result
 
         var collect = []
+        var grand_total = 0
+
         _.range(0,33).forEach(function(i){
             result = speed_lane(lines[i])
             should.not.exist(result)
@@ -81,6 +83,7 @@ describe ('process speed lane lines',function(){
             result = speed_lane(lines[i])
             if(result && result.length > 0){
                 collect = collect.concat(result)
+                grand_total += speed_lane.get_total()
             }
         })
 
@@ -118,8 +121,7 @@ describe ('process speed lane lines',function(){
         collect[19].should.eql([4,77.5,1])
         collect[20].should.eql([3,97.5,1])
         collect[21].should.eql([4,97.5,1])
-
-
+        grand_total.should.eql(91)
         done()
     })
 

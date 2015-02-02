@@ -2,10 +2,6 @@
 
 var should = require('should')
 var _ = require('lodash');
-// eventually, work out how to do
-// var rewire = require("rewire");
-// // rewire acts exactly like require.
-// var myModule = rewire("../lib/parse_pat_reports");
 
 var class_lane = require('../lib/class_lane.js')
 
@@ -74,6 +70,8 @@ describe ('process class lane lines',function(){
         var result
 
         var collect = []
+        var grand_total = 0
+
         _.range(0,10).forEach(function(i){
             result = class_lane(lines[i])
             should.not.exist(result)
@@ -85,6 +83,7 @@ describe ('process class lane lines',function(){
             result = class_lane(lines[i])
             if(result && result.length > 0){
                 collect = collect.concat(result)
+                grand_total += class_lane.get_total()
             }
         })
 
@@ -114,7 +113,7 @@ describe ('process class lane lines',function(){
         collect[11].should.eql([4,5,2])
         collect[12].should.eql([1,9,3])
         collect[13].should.eql([4,9,2])
-
+        grand_total.should.eql(91)
         done()
     })
 
