@@ -21,37 +21,6 @@ var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native
 var connectionString
 var config={}
 
-var speed_table = 'deleteme_test_summary_speed'
-var class_table = 'deleteme_test_summary_class'
-// var speed_class_table = 'deleteme_test_summary_speed_class'
-
-
-var create_tables =['CREATE  TABLE '+class_table+'('
-                   + '     site_no integer not null ,'
-                   + '     ts      timestamp not null,'
-                   + '     wim_lane_no integer not null,'
-                   + '     veh_class integer not null,'
-                   + '     veh_count integer not null,'
-                   + '     primary key (site_no,ts,wim_lane_no,veh_class)'
-                   + ' )'
-                   ,'CREATE TABLE '+speed_table+' ('
-                   + '     site_no integer not null ,'
-                   + '     ts      timestamp not null,'
-                   + '     wim_lane_no integer not null,'
-                   + '     veh_speed numeric not null,'
-                   + '     veh_count integer not null,'
-                   + '     primary key (site_no,ts,wim_lane_no,veh_speed)'
-                   + ' )'
-                   // ,'CREATE TABLE '+speed_class_table +' ('
-                   // + '     site_no integer not null ,'
-                   // + '     ts      timestamp not null,'
-                   // + '     wim_lane_no integer not null,'
-                   // + '     veh_class integer not null,'
-                   // + '     veh_speed numeric not null,'
-                   // + '     veh_count integer not null,'
-                   // + '     primary key (site_no,ts,wim_lane_no,veh_class,veh_speed)'
-                   // + ' )'
-                   ]
 
 before(function (done){
     config_okay(config_file,function(err,c){
@@ -76,11 +45,7 @@ before(function (done){
         connectionString = "pg://"+user+":"+pass+"@"+host+":"+port+"/"+db
 
         config['postgresql'] =
-            _.assign(c.postgresql
-                     ,{'speed_table':speed_table
-                       ,'class_table':class_table
-                      //,'speed_class_table':speed_class_table
-                      })
+            c.postgresql
         config.process_header_lines=process_header_lines
         return done()
     })
@@ -100,8 +65,34 @@ describe ('parse file code is okay',function(){
 describe ('parse file can process a file', function(){
     var localclient
     var localclientdone
+    var speed_table = 'deleteme_test_summary_speed1'
+    var class_table = 'deleteme_test_summary_class1'
+    var _config = {}
+
+
+    var create_tables =['CREATE  TABLE '+class_table+'('
+                       + '     site_no integer not null ,'
+                       + '     ts      timestamp not null,'
+                       + '     wim_lane_no integer not null,'
+                       + '     veh_class integer not null,'
+                       + '     veh_count integer not null,'
+                       + '     primary key (site_no,ts,wim_lane_no,veh_class)'
+                       + ' )'
+                       ,'CREATE TABLE '+speed_table+' ('
+                       + '     site_no integer not null ,'
+                       + '     ts      timestamp not null,'
+                       + '     wim_lane_no integer not null,'
+                       + '     veh_speed numeric not null,'
+                       + '     veh_count integer not null,'
+                       + '     primary key (site_no,ts,wim_lane_no,veh_speed)'
+                       + ' )'
+                       ]
 
     before(function(done){
+        _config=_.assign(_config,config)
+        _config.postgresql.speed_table=speed_table
+        _config.postgresql.class_table=class_table
+
         pg.connect(connectionString, function(err, _client, _done) {
             if(err){
                 console.log(err)
@@ -151,7 +142,7 @@ describe ('parse file can process a file', function(){
     })
     it('should parse a file',function(done){
 
-        var pf = ppr.setup_file_parser(config)
+        var pf = ppr.setup_file_parser(_config)
 
         should.exist(pf)
         var filename = rootdir+'/test/ird_small_test_file.txt'
@@ -200,10 +191,88 @@ describe ('parse file can process a file', function(){
         })
         return null
     })
+    return null
+})
+describe ('parse file can process a file', function(){
+    var localclient
+    var localclientdone
+    var speed_table = 'deleteme_test_summary_speed2'
+    var class_table = 'deleteme_test_summary_class2'
+    var _config = {}
+
+    var create_tables =['CREATE  TABLE '+class_table+'('
+                       + '     site_no integer not null ,'
+                       + '     ts      timestamp not null,'
+                       + '     wim_lane_no integer not null,'
+                       + '     veh_class integer not null,'
+                       + '     veh_count integer not null,'
+                       + '     primary key (site_no,ts,wim_lane_no,veh_class)'
+                       + ' )'
+                       ,'CREATE TABLE '+speed_table+' ('
+                       + '     site_no integer not null ,'
+                       + '     ts      timestamp not null,'
+                       + '     wim_lane_no integer not null,'
+                       + '     veh_speed numeric not null,'
+                       + '     veh_count integer not null,'
+                       + '     primary key (site_no,ts,wim_lane_no,veh_speed)'
+                       + ' )'
+                       ]
+
+    before(function(done){
+        _config=_.assign(_config,config)
+        _config.postgresql.speed_table=speed_table
+        _config.postgresql.class_table=class_table
+        pg.connect(connectionString, function(err, _client, _done) {
+            if(err){
+                console.log(err)
+                return done(err)
+            }
+            localclient = _client
+            localclientdone = _done
+
+            var q = queue(3)
+            create_tables.forEach(function(stmt){
+                q.defer(function(cb){
+                    var query = localclient.query(stmt)
+                    query.on('end', function(r){
+                        return cb()
+                    })
+                    query.on('error',function(e){
+                        console.log(e)
+                        throw new Error(e)
+                        return null
+                    })
+                })
+                return null
+            })
+            q.await(function(err){
+                return done()
+            })
+            return null
+        })
+    })
+
+    after( function(done){
+        var stmt = 'drop table '+[speed_table
+                                 ,class_table
+                                  //,speed_class_table
+                                 ].join(',')
+       var query = localclient.query(stmt)
+       query.on('end', function(r){
+            return done()
+       })
+        query.on('error',function(e){
+            console.log(e)
+            console.log('you should manually delete: '+stmt)
+            throw new Error(e)
+            return null
+        })
+        return null
+    })
 
     it('should parse a big file',function(done){
 
-        var pf = ppr.setup_file_parser(config)
+        var pf = ppr.setup_file_parser(_config)
         should.exist(pf)
         var filename = rootdir+'/test/2012/STATION.020'
         console.log('parsing '+filename)
