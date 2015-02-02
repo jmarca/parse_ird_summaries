@@ -76,7 +76,7 @@ describe ('process header lines',function(){
 
         record = phl.get_record()
         record.should.be.ok
-        record.should.eql([20,"'2012-03-02T09:00:00.000Z'"])
+        record.should.eql([20,"'2012-03-02 01:00:00'"])
 
         phl.reset()
         notready = phl.ready()
