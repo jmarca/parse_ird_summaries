@@ -3,14 +3,9 @@
 var should = require('should')
 var _ = require('lodash');
 
-var ppr = require('../lib/file_parser.js')
+var speed_lane = require('../lib/speed_lane.js')
 
 describe ('process speed lane lines',function(){
-    it('should exist', function(done){
-        var psll = ppr.process_speed_lane_lines
-        should.exist(psll)
-        done()
-    })
     it('should process class lane data lines properly',function(done){
         var lines =[
 '	Class and Speed Count by Lane  Report',
@@ -72,19 +67,18 @@ describe ('process speed lane lines',function(){
             ''
         ]
 
-        var psll = ppr.process_speed_lane_lines
         var result
 
         var collect = []
         _.range(0,33).forEach(function(i){
-            result = psll(lines[i])
+            result = speed_lane(lines[i])
             should.not.exist(result)
         })
 
 
         // now should have non null results
         _.range(33,53).forEach(function(i){
-            result = psll(lines[i])
+            result = speed_lane(lines[i])
             if(result && result.length > 0){
                 collect = collect.concat(result)
             }
@@ -92,7 +86,7 @@ describe ('process speed lane lines',function(){
 
         // no more matches
         _.range(53,lines.length).forEach(function(i){
-            result = psll(lines[i])
+            result = speed_lane(lines[i])
             should.not.exist(result)
         })
 

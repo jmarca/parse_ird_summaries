@@ -7,14 +7,9 @@ var _ = require('lodash');
 // // rewire acts exactly like require.
 // var myModule = rewire("../lib/parse_pat_reports");
 
-var ppr = require('../lib/file_parser.js')
+var class_lane = require('../lib/class_lane.js')
 
 describe ('process class lane lines',function(){
-    it('should exist', function(done){
-        var pcll = ppr.process_class_lane_lines
-        should.exist(pcll)
-        done()
-    })
     it('should process class lane data lines properly',function(done){
         var lines =[
 '	Class and Speed Count by Lane  Report',
@@ -76,19 +71,18 @@ describe ('process class lane lines',function(){
             ''
         ]
 
-        var pcll = ppr.process_class_lane_lines
         var result
 
         var collect = []
         _.range(0,10).forEach(function(i){
-            result = pcll(lines[i])
+            result = class_lane(lines[i])
             should.not.exist(result)
         })
 
 
         // now should have non null results
         _.range(10,26).forEach(function(i){
-            result = pcll(lines[i])
+            result = class_lane(lines[i])
             if(result && result.length > 0){
                 collect = collect.concat(result)
             }
@@ -96,7 +90,7 @@ describe ('process class lane lines',function(){
 
         // no more matches
         _.range(26,lines.length).forEach(function(i){
-            result = pcll(lines[i])
+            result = class_lane(lines[i])
             should.not.exist(result)
         })
 

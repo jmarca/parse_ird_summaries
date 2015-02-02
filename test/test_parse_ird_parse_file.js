@@ -21,8 +21,6 @@ var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native
 var connectionString
 var config={}
 
-var localclient
-var localclientdone
 var speed_table = 'deleteme_test_summary_speed'
 var class_table = 'deleteme_test_summary_class'
 // var speed_class_table = 'deleteme_test_summary_speed_class'
@@ -84,6 +82,26 @@ before(function (done){
                       //,'speed_class_table':speed_class_table
                       })
         config.process_header_lines=process_header_lines
+        return done()
+    })
+    return null
+})
+
+
+describe ('parse file code is okay',function(){
+    it('should exist', function(done){
+        var pf = ppr.setup_file_parser
+        should.exist(pf)
+        return done()
+    })
+    return null
+})
+
+describe ('parse file can process a file', function(){
+    var localclient
+    var localclientdone
+
+    before(function(done){
         pg.connect(connectionString, function(err, _client, _done) {
             if(err){
                 console.log(err)
@@ -112,38 +130,25 @@ before(function (done){
             })
             return null
         })
+    })
+
+    after( function(done){
+        var stmt = 'drop table '+[speed_table
+                                 ,class_table
+                                  //,speed_class_table
+                                 ].join(',')
+        var query = localclient.query(stmt)
+        query.on('end', function(r){
+            return done()
+        })
+        query.on('error',function(e){
+            console.log(e)
+            console.log('you should manually delete: '+stmt)
+            throw new Error(e)
+            return null
+        })
         return null
     })
-})
-
-after( function(done){
-    // var stmt = 'drop table '+[speed_table
-    //                          ,class_table
-    //                          //,speed_class_table
-    //                          ].join(',')
-    // var query = localclient.query(stmt)
-    // query.on('end', function(r){
-        return done()
-    // })
-    // query.on('error',function(e){
-    //     console.log(e)
-    //     console.log('you should manually delete: '+stmt)
-    //     throw new Error(e)
-    //     return null
-    // })
-    return null
-})
-
-describe ('parse file code is okay',function(){
-    it('should exist', function(done){
-        var pf = ppr.setup_file_parser
-        should.exist(pf)
-        return done()
-    })
-    return null
-})
-
-describe ('parse file can process a file', function(){
     it('should parse a file',function(done){
 
         var pf = ppr.setup_file_parser(config)
@@ -167,7 +172,7 @@ describe ('parse file can process a file', function(){
                           , 'veh_count'
                         )
                     });
-                    d.should.have.property('rows').with.lengthOf (1210)
+                    d.should.have.property('rows').with.lengthOf (1177)
                     console.log(d.rows.length)
                     pg_done()
                     return done()
@@ -179,47 +184,18 @@ describe ('parse file can process a file', function(){
         return null
     })
 
-    it('should parse a big file',function(done){
+    // it('should parse a big file',function(done){
 
-        var pf = ppr.setup_file_parser(config)
-        should.exist(pf)
-        var filename = rootdir+'/test/2012/STATION.020'
-        console.log('parsing '+filename)
-        pf(filename,function(err){
-            should.not.exist(err)
-            // add sql checks here
+    //     var pf = ppr.setup_file_parser(config)
+    //     should.exist(pf)
+    //     var filename = rootdir+'/test/2012/STATION.020'
+    //     console.log('parsing '+filename)
+    //     pf(filename,function(err){
+    //         should.not.exist(err)
+    //         // add sql checks here
 
 
-            return done(err)
-        })
-        return null
-    })
-
-    // it('should parse multiple troublesome files',function(done){
-    //     var fqueuer = ppr.file_queuer(config)
-    //     should.exist(fqueuer)
-    //     var groot = rootdir+'/test/report_0210_pr'
-    //     var pattern = "*"
-    //     glob("/**/"+pattern,{'cwd':groot,'root':groot},function(err,files){
-    //         var filequeue = queue()
-    //         files.forEach(function(f){
-    //             filequeue.defer(fs.stat,f)
-    //         })
-    //         filequeue.awaitAll(function(err,stats){
-    //             for(var i =0,j=stats.length;i<j; i++){
-    //                 if(stats[i].isFile()){
-    //                     fqueuer(files[i])
-    //                 }
-    //             }
-    //             fqueuer.awaitAll(function(e,results){
-    //                 should.not.exist(err)
-    //                 console.log('in test, done with files')
-    //                 // insert sql checks here
-    //                 return done()
-    //             })
-    //             return null
-    //         })
-    //         return null
+    //         return done(err)
     //     })
     //     return null
     // })
