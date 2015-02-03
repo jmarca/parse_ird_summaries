@@ -71,31 +71,40 @@ describe ('process speed lane lines',function(){
 
         var collect = []
         var grand_total = 0
+        var parser = speed_lane()
 
         _.range(0,33).forEach(function(i){
-            result = speed_lane(lines[i])
+            result = parser(lines[i])
             should.not.exist(result)
+            parser.parsed_something().should.not.be.ok;
         })
 
 
         // now should have non null results
         _.range(33,53).forEach(function(i){
-            result = speed_lane(lines[i])
+            result = parser(lines[i])
+            parser.parsed_something().should.be.ok;
             if(result && result.length > 0){
                 collect = collect.concat(result)
-                grand_total += speed_lane.get_total()
             }
         })
 
-        result = speed_lane(lines[53])
+        result = parser(lines[53])
         should.exist(result,'should parse 100 + line')
         result[0][0].should.eql(1)
         result[0][1].should.eql(100)
         // no more matches
         _.range(54,lines.length).forEach(function(i){
-            result = speed_lane(lines[i])
+            result = parser(lines[i])
             should.not.exist(result)
         })
+
+        grand_total = parser.get_total()
+        parser.parsed_something().should.be.ok;
+        grand_total.should.eql(92);
+        parser.reset()
+        parser.parsed_something().should.not.be.ok;
+        parser.get_total().should.eql(0);
 
         collect.should.have.length(22)
         collect.forEach(function(row){
@@ -125,7 +134,6 @@ describe ('process speed lane lines',function(){
         collect[19].should.eql([4,77.5,1])
         collect[20].should.eql([3,97.5,1])
         collect[21].should.eql([4,97.5,1])
-        grand_total.should.eql(91)
         done()
     })
 
