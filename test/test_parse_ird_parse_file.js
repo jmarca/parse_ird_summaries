@@ -55,7 +55,7 @@ before(function (done){
 
 describe ('parse file code is okay',function(){
     it('should exist', function(done){
-        var pf = ppr.setup_file_parser
+        var pf = ppr
         should.exist(pf)
         return done()
     })
@@ -142,7 +142,7 @@ describe ('parse file can process a file', function(){
     })
     it('should parse a file',function(done){
 
-        var pf = ppr.setup_file_parser(_config)
+        var pf = ppr(_config)
 
         should.exist(pf)
         var filename = rootdir+'/test/ird_small_test_file.txt'
@@ -273,7 +273,7 @@ describe ('parse file can process a  big file', function(){
 
     it('should parse a big file',function(done){
 
-        var pf = ppr.setup_file_parser(_config)
+        var pf = ppr(_config)
         should.exist(pf)
         var filename = rootdir+'/test/2012/STATION.020'
         console.log('parsing '+filename)
