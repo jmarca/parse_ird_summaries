@@ -17,13 +17,14 @@ var rootdir = path.normalize(__dirname)
 var config_file = rootdir+'/config.json'
 
 var setup_file_parser = require('./lib/file_parser.js')
+var process_header_lines = require('./lib/ird_header.js')
 
 var argv = require('optimist')
     .usage('parse IRD summary report files, save to database.\nUsage: $0')
     .default('r','/var/lib/wim')
     .alias('r', 'root')
     .describe('r', 'The root directory holding the IRD summary data.')
-    .default('p','STATION.\d\d\d')
+    .default('p','STATION.???')
     .alias('p', 'pattern')
     .describe('p', 'The file pattern to use when searching for IRD summary reports')
     .argv
@@ -48,12 +49,17 @@ config_okay(config_file,function(err,c){
     if(c.postgresql.host === undefined) c.postgresql.host = 'localhost'
     if(c.postgresql.port === undefined) c.postgresql.port = 5432
 
+    c.process_header_lines=process_header_lines
     var pf=setup_file_parser(c)
 
 
     console.log(['going to check',root,pattern])
 
     glob("/**/"+pattern,{'cwd':root,'root':root},function(err,files){
+        if(!files || !files.length) {
+            console.log('no files found matching pattern '+pattern)
+            return null
+        }
         var stat_queue = queue(5)
         var parse_queue = queue(5)
         console.log('found '+files.length+' files matching pattern.  Checking for real files, and processing')
@@ -70,12 +76,13 @@ config_okay(config_file,function(err,c){
                 }
             }
             console.log('processing queue loaded up')
-            .awaitAll(function(e,results){
+            parse_queue.awaitAll(function(e,results){
                 console.log('done with queued files')
                 process.exit()
             })
             return null
         })
+        return null
     })
 
     return null
