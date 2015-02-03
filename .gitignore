@@ -2,3 +2,5 @@
 /node_modules/
 /test.config.json
 /config.json
+**/.tern-port
+/2012.out
