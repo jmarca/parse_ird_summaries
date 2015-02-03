@@ -2,29 +2,18 @@
 
 var should = require('should')
 var _ = require('lodash');
-// eventually, work out how to do
-// var rewire = require("rewire");
-// // rewire acts exactly like require.
-// var myModule = rewire("../lib/parse_pat_reports");
 
-var ppr = require('../lib/parse_pat_reports')
-
-// test db
-var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
-var env = process.env
-var puser = process.env.PSQL_USER
-var ppass = process.env.PSQL_PASS
-var phost = process.env.PSQL_HOST || '127.0.0.1'
-var pport = process.env.PSQL_PORT || 5432
-var pdbname = process.env.PSQL_DB || 'test'
-var connectionString = "pg://"+puser+":"+ppass+"@"+phost+":"+pport+"/"+pdbname;
-
+var speed_hour = require('../lib/speed_hour')
 
 describe ('process speed lines',function(){
-    it('should exist', function(done){
-        var pshl = ppr.process_speed_hour_lines
-        should.exist(pshl)
-        done()
+    it('should exist', function(){
+        var ph = speed_hour()
+        should.exist(ph)
+        ph.should.be.a.Function;
+        ph.should.have.property('get_total')
+        ph.should.have.property('reset')
+        ph.should.have.property('parsed_something')
+        return null
     })
     it('should process speed class data lines properly',function(done){
         var lines =[
@@ -93,27 +82,43 @@ describe ('process speed lines',function(){
 ,'========================================================================================================================'
         ]
 
-        var pshl = ppr.process_speed_hour_lines
+        var ph = speed_hour()
         var result
-
         var collect = []
-        _.range(0,10).forEach(function(i){
-            result = pshl(lines[i])
+        var header_rows = [0,1,2,3,4,5,6,7,9]
+        header_rows.forEach(function(i){
+            result = ph(lines[i])
             should.not.exist(result)
+            ph.parsed_something().should.not.be.ok;
+            return null
         })
-
+        // skipped 8 above
+        result = ph(lines[8])
+        should.exist(result)
+        result.should.eql([])
+        ph.parsed_something().should.not.be.ok;
+        result = ph(lines[8])
 
         // now should have non null results
         _.range(10,43).forEach(function(i){
-            result = pshl(lines[i])
+            result = ph(lines[i])
+            should.exist(result)
             if(result && result.length > 0){
                 collect = collect.concat(result)
             }
+            ph.parsed_something().should.be.ok;
+            return null
         })
         // no more matches
         _.range(43,lines.length).forEach(function(i){
-            result = pshl(lines[i])
-            should.not.exist(result)
+            result = ph(lines[i])
+            // result either does not exist, or is empty
+            if(result){ // truthy
+                result.should.eql([])
+            }else{
+                should.not.exist(result)
+            }
+            return null
         })
 
         collect[0].should.have.length(3)
