@@ -27,10 +27,14 @@ var argv = require('optimist')
     .default('p','STATION.???')
     .alias('p', 'pattern')
     .describe('p', 'The file pattern to use when searching for IRD summary reports')
+    .default('m',0)
+    .alias('m', 'make')
+    .describe('m', 'make the temp database tables.  default is to not make the tables.  pass any truthy value to make them')
     .argv
 ;
 var root = argv.root;
 var pattern = argv.pattern;
+var make = argv.make;
 
 var glob = require('glob')
 
@@ -54,92 +58,106 @@ config_okay(config_file,function(err,c){
     if(c.postgresql.host === undefined) c.postgresql.host = 'localhost'
     if(c.postgresql.port === undefined) c.postgresql.port = 5432
 
-    // make the test databases
-    var db  = c.postgresql.parse_ird_summaries_db ? c.postgresql.parse_ird_summaries_db : 'spatialvds'
-    var connectionString = "pg://"+user+":"+pass+"@"+host+":"+port+"/"+db
+    c.process_header_lines=process_header_lines
 
-    var create_tables =['CREATE  TABLE '+c.postgresql.class_table+'('
-                       + '     site_no integer not null ,'
-                       + '     ts      timestamp without time zone not null,'
-                       + '     wim_lane_no integer not null,'
-                       + '     veh_class integer not null,'
-                       + '     veh_count integer not null,'
-                       + '     primary key (site_no,ts,wim_lane_no,veh_class)'
-                       + ' )'
-                       ,'CREATE TABLE '+c.postgresql.speed_table+' ('
-                       + '     site_no integer not null ,'
-                       + '     ts      timestamp without time zone not null,'
-                       + '     wim_lane_no integer not null,'
-                       + '     veh_speed numeric not null,'
-                       + '     veh_count integer not null,'
-                       + '     primary key (site_no,ts,wim_lane_no,veh_speed)'
-                       + ' )'
-                       ]
 
-    pg.connect(connectionString, function(err, _client, _done) {
-        if(err){
-            console.log(err)
-            return done(err)
-        }
-        var q = queue()
-        create_tables.forEach(function(stmt){
-            q.defer(function(cb){
-                var query = _client.query(stmt)
-                query.on('end', function(r){
-                    return cb()
-                })
-                query.on('error',function(e){
-                    console.log(e)
-                    throw new Error(e)
-                    return null
-                })
+    function do_it(){
+        // do the work
+        console.log(['going to check',root,pattern])
+
+        glob("/**/"+pattern,{'cwd':root,'root':root},function(err,files){
+            if(!files || !files.length) {
+                console.log('no files found matching pattern '+pattern)
+                return null
+            }
+            var stat_queue = queue(5)
+            var parse_queue = queue(5)
+            console.log('found '+files.length+' files matching pattern.  Checking for real files, and processing')
+            files.forEach(function(f){
+                stat_queue.defer(fs.stat,f)
+                return null
             })
-            return null
-        })
-        q.await(function(err){
-            // finished with sql client
-            _done()
-
-            // do the work
-            c.process_header_lines=process_header_lines
-
-            console.log(['going to check',root,pattern])
-
-            glob("/**/"+pattern,{'cwd':root,'root':root},function(err,files){
-                if(!files || !files.length) {
-                    console.log('no files found matching pattern '+pattern)
-                    return null
-                }
-                var stat_queue = queue(5)
-                var parse_queue = queue(5)
-                console.log('found '+files.length+' files matching pattern.  Checking for real files, and processing')
-                files.forEach(function(f){
-                    stat_queue.defer(fs.stat,f)
-                    return null
-                })
-                stat_queue.awaitAll(function(err,stats){
-                    for(var i =0,j=stats.length;
-                        i<j;
-                        i++){
-                        if(stats[i].isFile()){
-                            parse_queue.defer(setup_file_parser(c),files[i])
-                        }
+            stat_queue.awaitAll(function(err,stats){
+                for(var i =0,j=stats.length;
+                    i<j;
+                    i++){
+                    if(stats[i].isFile()){
+                        parse_queue.defer(setup_file_parser(c),files[i])
                     }
-                    console.log('processing queue loaded up')
-                    parse_queue.awaitAll(function(e,results){
-                        console.log('done with queued files')
-                        process.exit()
-                    })
-                    return null
+                }
+                console.log('processing queue loaded up')
+                parse_queue.awaitAll(function(e,results){
+                    console.log('done with queued files')
+                    process.exit()
                 })
                 return null
             })
-
+            return null
         })
-
-
-
         return null
-    })
+    }
+
+    if(!make){
+        do_it()
+    }else{
+        // make the test databases?
+
+        var host = c.postgresql.host     ? c.postgresql.host : '127.0.0.1';
+        var user = c.postgresql.username ? c.postgresql.username : 'myname';
+        var pass = c.postgresql.password ? c.postgresql.password : 'secret';
+        var port = c.postgresql.port     ? c.postgresql.port :  5432;
+        var db  = c.postgresql.parse_ird_summaries_db ? c.postgresql.parse_ird_summaries_db : 'spatialvds'
+        var connectionString = "pg://"+user+":"+pass+"@"+host+":"+port+"/"+db
+
+        var create_tables =['CREATE  TABLE '+c.postgresql.class_table+'('
+                            + '     site_no integer not null ,'
+                            + '     ts      timestamp without time zone not null,'
+                            + '     wim_lane_no integer not null,'
+                            + '     veh_class integer not null,'
+                            + '     veh_count integer not null,'
+                            + '     primary key (site_no,ts,wim_lane_no,veh_class)'
+                            + ' )'
+                            ,'CREATE TABLE '+c.postgresql.speed_table+' ('
+                            + '     site_no integer not null ,'
+                            + '     ts      timestamp without time zone not null,'
+                            + '     wim_lane_no integer not null,'
+                            + '     veh_speed numeric not null,'
+                            + '     veh_count integer not null,'
+                            + '     primary key (site_no,ts,wim_lane_no,veh_speed)'
+                            + ' )'
+                           ]
+
+        pg.connect(connectionString, function(err, _client, _done) {
+            if(err){
+                console.log(err)
+                return _done(err)
+            }
+            var q = queue()
+            create_tables.forEach(function(stmt){
+                q.defer(function(cb){
+                    var query = _client.query(stmt)
+                    query.on('end', function(r){
+                        return cb()
+                    })
+                    query.on('error',function(e){
+                        console.log(e)
+                        throw new Error(e)
+                        return null
+                    })
+                })
+                return null
+            })
+            q.await(function(err){
+                // finished with sql client
+                _done()
+                do_it()
+                return null
+            })
+
+
+
+            return null
+        })
+    }
     return null
 })
