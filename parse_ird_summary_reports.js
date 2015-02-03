@@ -50,8 +50,6 @@ config_okay(config_file,function(err,c){
     if(c.postgresql.port === undefined) c.postgresql.port = 5432
 
     c.process_header_lines=process_header_lines
-    var pf=setup_file_parser(c)
-
 
     console.log(['going to check',root,pattern])
 
@@ -72,7 +70,7 @@ config_okay(config_file,function(err,c){
                 i<j;
                 i++){
                 if(stats[i].isFile()){
-                    parse_queue.defer(pf,files[i])
+                    parse_queue.defer(setup_file_parser(c),files[i])
                 }
             }
             console.log('processing queue loaded up')
