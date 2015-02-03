@@ -9,7 +9,13 @@ modular and all that.
 
 # daylight savings time hell
 
-Lordy I hate DST calculations.  Apparently moment is broken with
-converting local dates to UTC, because it is giving different answers
-on my laptop and my server.  So there is a bug right now that I have
-to make moment believe that the data is floating timezone, like perl
+Lordy I hate DST calculations.  Apparently the WIM data is collected
+without regard to the current DST dates.  It *might* be that the data
+are using some old, hard-coded DST regime, but most likely it is
+skipping the official DST and is manually reset.
+
+Regardless, I have to parse as if there is not time zone, in order to
+maintain consistency.  The hours in the data are believed to be ground
+truth, after adjusting for local time.  So I parse using moment.tz
+with the default time zone set to UTC, and then pump into a table in
+postgresql that is timestamp without time zone.
