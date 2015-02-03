@@ -7,21 +7,21 @@ var _ = require('lodash');
 // // rewire acts exactly like require.
 // var myModule = rewire("../lib/parse_pat_reports");
 
-var ppr = require('../lib/parse_pat_reports')
+var parse_head = require('../lib/pat_header.js')
 
 
 
 describe ('process header lines',function(){
-    it('should exist', function(done){
-        var phl = ppr.process_header_lines()
-        should.exist(phl)
-        phl.should.have.property('reset')
-        phl.should.have.property('get_lane')
-        phl.should.have.property('get_date')
-        phl.should.have.property('get_direction')
-        phl.should.have.property('get_site_no')
-        phl.should.have.property('ready')
-        done()
+    it('should exist', function(){
+        var ph = parse_head()
+        should.exist(ph)
+        ph.should.have.property('reset')
+        ph.should.have.property('get_lane')
+        ph.should.have.property('get_date')
+        ph.should.have.property('get_direction')
+        ph.should.have.property('get_site_no')
+        ph.should.have.property('ready')
+        return null
     })
     it('should process header lines properly',function(done){
         var lines = ['                    DISTRIBUTION OF VEHICLE SPEEDS BY HOUR OF DAY'
@@ -30,56 +30,56 @@ describe ('process header lines',function(){
                     ,'DATE    :   01/12/10               County   :  SCL          State-ID : 06             Direction :   7'
                     ,'========================================================================================================================']
 
-        var phl = ppr.process_header_lines()
-        var notready = phl.ready()
+        var ph = parse_head()
+        var notready = ph.ready()
         notready.should.not.be.ok
 
-        phl(lines[0])
-        notready = phl.ready()
+        ph(lines[0])
+        notready = ph.ready()
         notready.should.not.be.ok
 
-        phl(lines[1])
-        notready = phl.ready()
+        ph(lines[1])
+        notready = ph.ready()
         notready.should.not.be.ok
 
-        phl(lines[2])
-        notready = phl.ready()
+        ph(lines[2])
+        notready = ph.ready()
         notready.should.not.be.ok
 
-        var site_no = phl.get_site_no()
+        var site_no = ph.get_site_no()
         site_no.should.eql(35)
 
-        var lane = phl.get_lane()
+        var lane = ph.get_lane()
         lane.should.eql(1)
 
-        var record = phl.get_record(15)
+        var record = ph.get_record(15)
         should.not.exist(record)
 
-        phl(lines[3])
-        notready = phl.ready()
+        ph(lines[3])
+        notready = ph.ready()
         notready.should.be.ok
 
-        phl(lines[4])
-        notready = phl.ready()
+        ph(lines[4])
+        notready = ph.ready()
         notready.should.be.ok
 
-        var date = phl.get_date()
+        var date = ph.get_date()
         var date_string = date.toISOString()
-        date_string.should.eql( (new Date(2010,0,12)).toISOString())
+        date_string.should.eql( (new Date('2010-01-12T00:00:00-0000')).toISOString())
 
-        var direction = phl.get_direction()
+        var direction = ph.get_direction()
         direction.should.eql(7)
 
-        record = phl.get_record(15)
+        record = ph.get_record(15)
         record.should.be.ok
-        record.should.eql([35,"'2010-01-12T23:00:00.000Z'",1])
+        record.should.eql([35,"'2010-01-12 15:00:00'",1])
 
-        phl(lines[4])
-        notready = phl.ready()
+        ph(lines[4])
+        notready = ph.ready()
         notready.should.be.ok
 
-        phl.reset()
-        notready = phl.ready()
+        ph.reset()
+        notready = ph.ready()
         notready.should.not.be.ok
 
         done()
