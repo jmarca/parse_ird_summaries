@@ -72,7 +72,7 @@ describe ('process header lines',function(){
 
         var date = phl.get_date()
         var date_string = date.toISOString()
-        date_string.should.eql( (new Date('2012-03-02T01:00:00-0800')).toISOString())
+        date_string.should.eql( (new Date('2012-03-02T01:00:00-0000')).toISOString())
 
         record = phl.get_record()
         record.should.be.ok
@@ -137,7 +137,7 @@ describe ('process header lines',function(){
                         //
                         // jeez I hate DST and all the broken parsing
                         // and hashing surrounding it
-                        var test_dupe_data_day = d.isBetween('2012-03-19T23:59:00', '2012-03-21T00:00:01');
+                        var test_dupe_data_day = d.isBetween('2012-03-19T23:59:00-0000', '2012-03-21T00:00:01-0000');
 
                         var test_dup_okay = test_DST || test_dupe_data_day
                         if(!test_dup_okay){
