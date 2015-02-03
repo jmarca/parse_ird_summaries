@@ -9,50 +9,17 @@ var fs = require('fs')
 var path = require('path')
 var rootdir = path.normalize(__dirname+'/..')
 var config_file = rootdir+'/test.config.json'
+var process_header_lines = require('../lib/pat_header.js')
 
 var glob = require('glob')
 
-var ppr = require('../lib/file_parser')
+var ppr = require('../lib/pat_file_parser.js')
 
 // test db
 var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
 
 var connectionString
 var config={}
-
-var localclient
-var localclientdone
-var speed_table = 'deleteme_test_summary_speed'
-var class_table = 'deleteme_test_summary_class'
-var speed_class_table = 'deleteme_test_summary_speed_class'
-
-
-var create_tables =['CREATE  TABLE '+class_table+'('
-                   + '     site_no integer not null ,'
-                   + '     ts      timestamp not null,'
-                   + '     wim_lane_no integer not null,'
-                   + '     veh_class integer not null,'
-                   + '     veh_count integer not null,'
-                   + '     primary key (site_no,ts,wim_lane_no,veh_class)'
-                   + ' )'
-                   ,'CREATE TABLE '+speed_table+' ('
-                   + '     site_no integer not null ,'
-                   + '     ts      timestamp not null,'
-                   + '     wim_lane_no integer not null,'
-                   + '     veh_speed numeric not null,'
-                   + '     veh_count integer not null,'
-                   + '     primary key (site_no,ts,wim_lane_no,veh_speed)'
-                   + ' )'
-                   ,'CREATE TABLE '+speed_class_table +' ('
-                   + '     site_no integer not null ,'
-                   + '     ts      timestamp not null,'
-                   + '     wim_lane_no integer not null,'
-                   + '     veh_class integer not null,'
-                   + '     veh_speed numeric not null,'
-                   + '     veh_count integer not null,'
-                   + '     primary key (site_no,ts,wim_lane_no,veh_class,veh_speed)'
-                   + ' )'
-                   ]
 
 before(function (done){
     config_okay(config_file,function(err,c){
@@ -76,13 +43,62 @@ before(function (done){
         var db  = c.postgresql.parse_pat_summaries_db ? c.postgresql.parse_pat_summaries_db : 'spatialvds'
         connectionString = "pg://"+user+":"+pass+"@"+host+":"+port+"/"+db
 
-        config['postgresql'] =
-            _.assign(c.postgresql
-                     ,{'speed_table':speed_table
-                       ,'class_table':class_table
-                       ,'speed_class_table':speed_class_table
-                      })
+        config['postgresql'] = c.postgresql
+        config.process_header_lines=process_header_lines
+        return done()
+    })
+    return null
+})
 
+describe ('parse file code is okay',function(){
+    it('should exist', function(done){
+        var pf = ppr
+        should.exist(pf)
+        return done()
+    })
+    return null
+})
+
+describe ('parse file can process a file', function(){
+    var localclient
+    var localclientdone
+    var speed_table = 'deleteme_test_summary_speed1'
+    var class_table = 'deleteme_test_summary_class1'
+    var speed_class_table = 'deleteme_test_summary_speed_class1'
+    var _config = {}
+
+    var create_tables =['CREATE  TABLE '+class_table+'('
+                       + '     site_no integer not null ,'
+                       + '     ts      timestamp without time zone not null,'
+                       + '     wim_lane_no integer not null,'
+                       + '     veh_class integer not null,'
+                       + '     veh_count integer not null,'
+                       + '     primary key (site_no,ts,wim_lane_no,veh_class)'
+                       + ' )'
+                       ,'CREATE TABLE '+speed_table+' ('
+                       + '     site_no integer not null ,'
+                       + '     ts      timestamp without time zone not null,'
+                       + '     wim_lane_no integer not null,'
+                       + '     veh_speed numeric not null,'
+                       + '     veh_count integer not null,'
+                       + '     primary key (site_no,ts,wim_lane_no,veh_speed)'
+                       + ' )'
+                       ,'CREATE TABLE '+speed_class_table +' ('
+                       + '     site_no integer not null ,'
+                       + '     ts      timestamp without time zone not null,'
+                       + '     wim_lane_no integer not null,'
+                       + '     veh_class integer not null,'
+                       + '     veh_speed numeric not null,'
+                       + '     veh_count integer not null,'
+                       + '     primary key (site_no,ts,wim_lane_no,veh_class,veh_speed)'
+                       + ' )'
+                       ]
+
+    before(function(done){
+        _config=_.assign(_config,config)
+        _config.postgresql.speed_table=speed_table
+        _config.postgresql.class_table=class_table
+        _config.postgresql.speed_class_table=speed_class_table
         pg.connect(connectionString, function(err, _client, _done) {
             if(err){
                 console.log(err)
@@ -113,84 +129,86 @@ before(function (done){
         })
         return null
     })
-})
-
-after( function(done){
-    var stmt = 'drop table '+[speed_table
-                             ,class_table
-                             ,speed_class_table].join(',')
-    var query = localclient.query(stmt)
-    query.on('end', function(r){
-        return done()
-    })
-    query.on('error',function(e){
-        console.log(e)
-        console.log('you should manually delete: '+stmt)
-        throw new Error(e)
+    after( function(done){
+        var stmt = 'drop table '+[speed_table
+                                 ,class_table
+                                 ,speed_class_table
+                                 ].join(',')
+       var query = localclient.query(stmt)
+       query.on('end', function(r){
+            return done()
+       })
+        query.on('error',function(e){
+            console.log(e)
+            console.log('you should manually delete: '+stmt)
+            throw new Error(e)
+            return null
+        })
         return null
     })
-    return null
-})
 
-describe ('parse file code is okay',function(){
-    it('should exist', function(done){
-        var pf = ppr.setup_file_parser
-        should.exist(pf)
-        return done()
-    })
-    return null
-})
 
-describe ('parse file can process a file', function(){
     it('should parse a file',function(done){
 
-        var pf = ppr.setup_file_parser(config)
+        var pf = ppr(config)
         should.exist(pf)
-        var filename = rootdir+'/test/pat_small_test_file.txt'
+        var filename = rootdir+'/test/report_0210_pr/0210.small'
         console.log('parsing '+filename)
         pf(filename,function(err){
             should.not.exist(err)
-            // add sql checks here
-            return done(err)
-        })
-        return null
-    })
+            var speed_counts = pf.get_speed_total()
+            var class_counts = pf.get_class_total()
+            speed_counts.should.be.approximately(class_counts,class_counts*0.01) // within 10%
+            pg.connect(connectionString, function(err, pg_client, pg_done) {
 
-    it('should parse a big file',function(done){
+                pg_client.query('select * from '+speed_table,function(e,d){
+                    should.not.exist(e)
+                    should.exist(d)
+                    d.rows.forEach(function(row,i){
+                        row.should.have.keys(
+                            'site_no'
+                          , 'ts'
+                          , 'wim_lane_no'
+                          , 'veh_speed'
+                          , 'veh_count'
+                        )
+                    });
 
-        var pf = ppr.setup_file_parser(config)
-        should.exist(pf)
-        var filename = rootdir+'/test/pat_report_sample_2.txt'
-        console.log('parsing '+filename)
-        pf(filename,function(err){
-            should.not.exist(err)
-            // add sql checks here
-            return done(err)
-        })
-        return null
-    })
+                    d.should.have.property('rows').with.lengthOf(701)
 
-    it('should parse multiple troublesome files',function(done){
-        var fqueuer = ppr.file_queuer(config)
-        should.exist(fqueuer)
-        var groot = rootdir+'/test/report_0210_pr'
-        var pattern = "*"
-        glob("/**/"+pattern,{'cwd':groot,'root':groot},function(err,files){
-            var filequeue = queue()
-            files.forEach(function(f){
-                filequeue.defer(fs.stat,f)
-            })
-            filequeue.awaitAll(function(err,stats){
-                for(var i =0,j=stats.length;i<j; i++){
-                    if(stats[i].isFile()){
-                        fqueuer(files[i])
-                    }
-                }
-                fqueuer.awaitAll(function(e,results){
-                    should.not.exist(err)
-                    console.log('in test, done with files')
-                    // insert sql checks here
-                    return done()
+                    pg_client.query('select * from '+class_table,function(e,d){
+                        should.not.exist(e)
+                        should.exist(d)
+                        d.rows.forEach(function(row,i){
+                            row.should.have.keys(
+                                'site_no'
+                              , 'ts'
+                              , 'wim_lane_no'
+                              , 'veh_class'
+                              , 'veh_count'
+                            )
+                        });
+                        d.should.have.property('rows').with.lengthOf(595)
+                        pg_client.query('select * from '+speed_class_table,function(e,d){
+                            should.not.exist(e)
+                            should.exist(d)
+                            d.rows.forEach(function(row,i){
+                                row.should.have.keys(
+                                    'site_no'
+                                  , 'ts'
+                                  , 'wim_lane_no'
+                                  , 'veh_class'
+                                  , 'veh_speed'
+                                  , 'veh_count'
+                                )
+                            });
+                            d.should.have.property('rows').with.lengthOf(226)
+                            pg_done()
+                            return done()
+                        })
+                        return null
+                    })
+                    return null
                 })
                 return null
             })
@@ -198,13 +216,5 @@ describe ('parse file can process a file', function(){
         })
         return null
     })
-
     return null
 })
-
-// these are tested implicitly above
-// describe('options setting',function(){
-//     it ('should allow different schemas in options setting')
-//     it ('should allow different schemas in environ setting')
-//     it ('should allow different db tables via options setting')
-// })
