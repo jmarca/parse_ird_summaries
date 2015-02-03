@@ -61,9 +61,9 @@ describe ('process speed lane lines',function(){
 ' 85->90  |       0      0.0        0      0.0        0      0.0        0      0.0        0      0.0 ',
 ' 90->95  |       0      0.0        0      0.0        0      0.0        0      0.0        0      0.0 ',
 ' 95->100 |       0      0.0        0      0.0        1     12.5        1      3.4        2      2.2 ',
-' 100 +   |       0      0.0        0      0.0        0      0.0        0      0.0        0      0.0 ',
+' 100 +   |       1    100.0        0      0.0        0      0.0        0      0.0        1    100.0 ',
 '= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = ',
-'  Total  |      48     52.7        6      6.6        8      8.8       29     31.9       91    100.0 ',
+'  Total  |      49     52.7        6      6.6        8      8.8       29     31.9       92    100.0 ',
             ''
         ]
 
@@ -87,8 +87,12 @@ describe ('process speed lane lines',function(){
             }
         })
 
+        result = speed_lane(lines[53])
+        should.exist(result,'should parse 100 + line')
+        result[0][0].should.eql(1)
+        result[0][1].should.eql(100)
         // no more matches
-        _.range(53,lines.length).forEach(function(i){
+        _.range(54,lines.length).forEach(function(i){
             result = speed_lane(lines[i])
             should.not.exist(result)
         })
