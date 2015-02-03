@@ -71,27 +71,34 @@ describe ('process class lane lines',function(){
 
         var collect = []
         var grand_total = 0
-
+        var parser = class_lane()
         _.range(0,10).forEach(function(i){
-            result = class_lane(lines[i])
+            result = parser(lines[i])
             should.not.exist(result)
+            parser.parsed_something().should.not.be.ok;
         })
 
 
         // now should have non null results
         _.range(10,26).forEach(function(i){
-            result = class_lane(lines[i])
+            result = parser(lines[i])
+            parser.parsed_something().should.be.ok;
             if(result && result.length > 0){
                 collect = collect.concat(result)
-                grand_total += class_lane.get_total()
             }
         })
 
         // no more matches
         _.range(26,lines.length).forEach(function(i){
-            result = class_lane(lines[i])
+            result = parser(lines[i])
             should.not.exist(result)
         })
+        grand_total = parser.get_total()
+        parser.parsed_something().should.be.ok;
+        grand_total.should.eql(91);
+        parser.reset()
+        parser.parsed_something().should.not.be.ok;
+        parser.get_total().should.eql(0);
 
         collect.should.have.length(14)
         collect.forEach(function(row){
@@ -113,7 +120,6 @@ describe ('process class lane lines',function(){
         collect[11].should.eql([4,5,2])
         collect[12].should.eql([1,9,3])
         collect[13].should.eql([4,9,2])
-        grand_total.should.eql(91)
         done()
     })
 

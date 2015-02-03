@@ -166,7 +166,7 @@ describe ('parse file can process a file', function(){
                           , 'veh_count'
                         )
                     });
-                    d.should.have.property('rows').with.lengthOf(1193)
+                    d.should.have.property('rows').with.lengthOf(1195)
                     pg_client.query('select * from '+class_table,function(e,d){
                         should.not.exist(e)
                         should.exist(d)
@@ -297,7 +297,7 @@ describe ('parse file can process a  big file', function(){
                           , 'veh_count'
                         )
                     });
-                    d.should.have.property('rows').with.lengthOf(15842)
+                    d.should.have.property('rows').with.lengthOf(15870)
                     pg_client.query('select * from '+class_table,function(e,d){
                         should.not.exist(e)
                         should.exist(d)
