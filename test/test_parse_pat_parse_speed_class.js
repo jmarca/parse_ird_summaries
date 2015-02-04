@@ -2,28 +2,17 @@
 
 var should = require('should')
 var _ = require('lodash');
-// eventually, work out how to do
-// var rewire = require("rewire");
-// // rewire acts exactly like require.
-// var myModule = rewire("../lib/parse_pat_reports");
-
-var ppr = require('../lib/parse_pat_reports')
-
-// test db
-var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
-var env = process.env
-var puser = process.env.PSQL_USER
-var ppass = process.env.PSQL_PASS
-var phost = process.env.PSQL_HOST || '127.0.0.1'
-var pport = process.env.PSQL_PORT || 5432
-var pdbname = process.env.PSQL_DB || 'test'
-var connectionString = "pg://"+puser+":"+ppass+"@"+phost+":"+pport+"/"+pdbname;
+var speed_class = require('../lib/speed_class.js')
 
 
 describe ('process speed class lines',function(){
     it('should exist', function(done){
-        var pscl = ppr.process_speed_class_lines
-        should.exist(pscl)
+        var psc = speed_class()
+        should.exist(psc)
+        psc.should.be.a.Function;
+        psc.should.have.property('get_total')
+        psc.should.have.property('reset')
+        psc.should.have.property('parsed_something')
         done()
     })
     it('should process speed class data lines properly',function(done){
@@ -76,33 +65,43 @@ describe ('process speed class lines',function(){
           ,'========================================================================================================================'
         ]
 
-        var pscl = ppr.process_speed_class_lines
+        var psc = speed_class()
         var result
 
         var collect = []
+        _.range(0,11).forEach(function(i){
+            psc.parsed_something().should.not.be.ok;
+            result = psc(lines[i])
+            should.not.exist(result)
+            return null
+        })
+
         _.range(11,16).forEach(function(i){
-            result = pscl(lines[i])
+            result = psc(lines[i])
             should.exist(result)
             result.should.be.instanceOf(Array).with.lengthOf(0)
+            psc.parsed_something().should.be.ok;
+            return null
         })
 
 
-        // now should have non null results
+        // now should have non empty results
         _.range(16,29).forEach(function(i){
-            result = pscl(lines[i])
+            result = psc(lines[i])
             should.exist(result)
             collect = collect.concat(result)
+            return null
         })
 
-        result = pscl(lines[29])
+        result = psc(lines[29])
+        should.exist(result)
+        result.should.be.instanceOf(Array).with.lengthOf(0)
+
+        _.range(30,32).forEach(function(i){
+            result = psc(lines[i])
             should.exist(result)
-            result.should.be.instanceOf(Array).with.lengthOf(0)
-
-                _.range(30,32).forEach(function(i){
-            result = pscl(lines[i])
-                    should.exist(result)
-
             collect = collect.concat(result)
+            return null
         })
 
 
@@ -110,10 +109,10 @@ describe ('process speed class lines',function(){
         collect[8].should.have.length(3)
         collect.should.have.length(62)
         var popped = collect.pop()
-        console.log(popped)
         popped.should.eql([100,3,2])
-
-        done()
+        psc.reset()
+        psc.parsed_something().should.not.be.ok;
+        return done()
     })
 
 })
