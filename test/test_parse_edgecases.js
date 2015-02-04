@@ -145,7 +145,8 @@ describe ('parse file can process a file', function(){
         var pf = ppr(_config)
 
         should.exist(pf)
-        var filename = rootdir+'/test/ird_smaller_test_file.txt'
+        //var filename = rootdir+'/test/ird_smaller_test_file.txt'
+        var filename = rootdir +'/test/2012/STATION.812'
         console.log('parsing '+filename)
         pf(filename,function(err){
             should.not.exist(err)
