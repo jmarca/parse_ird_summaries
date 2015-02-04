@@ -16,7 +16,7 @@ var path = require('path')
 var rootdir = path.normalize(__dirname)
 var config_file = rootdir+'/config.json'
 
-var setup_file_parser = require('./lib/file_parser.js')
+var setup_file_parser = require('./lib/pat_file_parser.js')
 var process_header_lines = require('./lib/pat_header.js')
 
 var argv = require('optimist')
