@@ -138,3 +138,35 @@ just live with it.  At some point there is a gap in the data or a
 repeated hour and that's the way it goes.
 
 But for sure the timezone is not handled strictly correctly.
+
+# Running the parsers
+
+To run the PAT parser, do something like:
+
+```
+node parse_pat_summary_reports.js -r /bkup/wim/processed/2011/ -p TEMP.PRN >> 2011.pat.out 2>&1
+```
+
+Obviously you'll need to change the directory `/bkup/wim/...` to
+something that makes sense...wherever you have the PAT data hiding.
+
+If you want to do less than a full year at a time, you can drill down
+to subdirectories.
+
+To run the IRD parser, do something like:
+
+
+```
+node parse_ird_summary_reports.js -r /bkup/wim/processed/2013/1213 -p STATION.??? >2013.12.out 2>&1 &
+```
+
+Again, change the root directory using the `-r` option to the correct
+root directory holding the IRD station summary files.  As with PAT,
+the code will recursively descend into the sub directories and will
+find all files matching the given pattern (STATION.??? matches
+STATION.020, STATION.010, etc).
+
+These are Bash type commands, obviously.  Not sure what to do in a
+windows environment, but if you run node from a cygwin type command
+line, you should be able to use the redirection of output and error
+output to the files.
