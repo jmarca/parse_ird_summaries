@@ -1,0 +1,9 @@
+/home/james/repos/jem/calvad/wim_parsing/parse_ird_summaries/test/2012/STATION.812: line 10628
+/home/james/repos/jem/calvad/wim_parsing/parse_ird_summaries/test/2012/STATION.047: line 58410
+/home/james/repos/jem/calvad/wim_parsing/parse_ird_summaries/test/2012/STATION.812: line 10628
+/home/james/repos/jem/calvad/wim_parsing/parse_ird_summaries/test/2012/STATION.047: line 58410
+/var/lib/wim/processed_wim_2011/2013/0913/IRD/station_039/STATION.812: line 10628
+/var/lib/wim/processed_wim_2011/2013/0913/IRD/station_040/STATION.814: line 22712
+/var/lib/wim/processed_wim_2011/2013/0913/IRD/station_047/STATION.854: line 14057
+/var/lib/wim/processed_wim_2011/2013/0913/IRD/station_049/STATION.844: line 21585
+/var/lib/wim/processed_wim_2011/2013/0913/IRD/station_047/STATION.047: line 58410
