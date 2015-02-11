@@ -170,3 +170,13 @@ These are Bash type commands, obviously.  Not sure what to do in a
 windows environment, but if you run node from a cygwin type command
 line, you should be able to use the redirection of output and error
 output to the files.
+
+# Parsing Errors, PAT edition
+
+Parsing the 2010 PAT caused a crash due to a single wacky table,
+possibly more.  Rather than bail out, my strategy is to just ignore
+the table.  Which requires adding another "state" in addition to the
+ready bit.  Working on that logic now, but essentially, what I want to
+do is that if there is any negative value in the table, then set the
+"bad table" flag, and every other line is read as zero until the reset
+switch is flipped.
