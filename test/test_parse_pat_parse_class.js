@@ -13,6 +13,7 @@ describe ('process class lines',function(){
         ph.should.have.property('get_total')
         ph.should.have.property('reset')
         ph.should.have.property('parsed_something')
+        ph.should.have.property('good_read')
         return done()
     })
     it('should process speed class data lines properly',function(done){
